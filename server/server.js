@@ -1,30 +1,48 @@
-require("dotenv").config(); // .env dosyasındaki değişkenleri kullanmak için
-const express = require("express"); // Express framework'ünü dahil ediyoruz
-const cors = require("cors"); // CORS politikalarını yönetmek için
-const mongoose = require("mongoose"); // MongoDB bağlantısı için mongoose
-const mongoURI = process.env.MONGO_URI;
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const cors = require("cors");
 
-const app = express(); // Express uygulamasını oluşturuyoruz
-const PORT = process.env.PORT || 5000; // Port numarasını belirliyoruz
+const app = express();
 
-// Middleware'ler (Veriyi işleyen ara katmanlar)
-app.use(express.json()); // JSON formatındaki istekleri kabul et
-app.use(cors()); // CORS izinlerini aç
+app.use(cors());
+app.use(bodyParser.json());
 
-mongoose
-  .connect(mongoURI) // Gereksiz seçenekleri kaldırdık
-  .then(() => console.log("✅ MongoDB bağlantısı başarılı!"))
-  .catch((err) => {
-    console.error("❌ MongoDB bağlantı hatası:", err);
-    process.exit(1); // Hata olursa uygulamayı durdur
-  });
-
-// Basit bir test endpoint'i (API'nin çalıştığını görmek için)
-app.get("/", (req, res) => {
-  res.send("Backend çalışıyor!"); // Tarayıcıya veya Postman'e mesaj döndürür
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-// Sunucuyu başlat
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "Connection error:"));
+db.once("open", () => {
+  console.log("MongoDB connected successfully");
+});
+
+const answerSchema = new mongoose.Schema({
+  username: String,
+  password: Boolean,
+});
+
+const Answer = mongoose.model("User", answerSchema);
+
+app.post("/api-auth", async (req, res) => {
+  const { username, password } = req.body;
+
+  const newAnswer = new Answer({
+    username,
+    password,
+  });
+
+  try {
+    await newAnswer.save();
+    res.status(200).json({ message: "Answer saved!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error saving answer" });
+  }
+});
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server ${PORT} portunda çalışıyor...`);
+  console.log(`Server is running on port ${PORT}`);
 });
