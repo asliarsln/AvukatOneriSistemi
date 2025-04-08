@@ -22,7 +22,7 @@ db.once("open", () => {
 
 const answerSchema = new mongoose.Schema({
   username: String,
-  password: Boolean,
+  password: String,
 });
 
 const Answer = mongoose.model("User", answerSchema);
@@ -39,7 +39,10 @@ app.post("/api-auth", async (req, res) => {
     await newAnswer.save();
     res.status(200).json({ message: "Answer saved!" });
   } catch (error) {
-    res.status(500).json({ message: "Error saving answer" });
+    console.error("Error during saving to DB:", error); // Hata mesajlarını daha detaylı logla
+    res
+      .status(500)
+      .json({ message: "Error saving answer", error: error.message });
   }
 });
 

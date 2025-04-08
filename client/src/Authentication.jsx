@@ -10,7 +10,7 @@ const Authentication = () => {
     e.preventDefault();
     console.log("Çalışıyor");
     try {
-      const response = await axios.post("http://localhost:5000/api/auth", {
+      const response = await axios.post("http://localhost:5000/api-auth", {
         username,
         password,
       });
